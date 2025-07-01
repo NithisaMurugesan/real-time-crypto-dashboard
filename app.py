@@ -199,7 +199,7 @@ if show_history:
         )
         st.plotly_chart(fig_history, use_container_width=True)
         
-## --- CRYPTO NEWS SECTION WITH FALLBACK ---
+# --- CRYPTO NEWS SECTION WITH FALLBACK ---
 def get_crypto_news():
     url = "https://cryptonews-api.com/api/v1?tickers=BTC,ETH,DOGE,LTC&items=5&token=demo"
     try:
@@ -210,27 +210,29 @@ def get_crypto_news():
         if "data" in data and isinstance(data["data"], list):
             return data["data"]
         else:
-            return FALLBACK_NEWS  # fallback if structure is wrong
+            return FALLBACK_NEWS
     except Exception as e:
         st.warning(f"💥 Couldn't fetch live news. Showing fallback.")
         return FALLBACK_NEWS
 
-
 FALLBACK_NEWS = [
     {
         "title": "Welcome to Your Crypto Dashboard! 🚀",
-        "link": "#",
-        "feedDate": time.strftime("%Y-%m-%d"),
+        "news_url": "#",
+        "source_name": "CryptoBot",
+        "date": time.strftime("%Y-%m-%d"),
         "description": "Your dashboard is live — more news will appear here when available."
     },
     {
         "title": "Pro Tip: Check Volume & Volatility Next!",
-        "link": "#",
-        "feedDate": time.strftime("%Y-%m-%d"),
+        "news_url": "#",
+        "source_name": "Dashboard Guide",
+        "date": time.strftime("%Y-%m-%d"),
         "description": "Traders often watch volume spikes to catch big moves."
     }
 ]
 
+# --- DISPLAY NEWS ---
 st.markdown("---")
 st.subheader("📰 Latest Crypto News")
 news_items = get_crypto_news()
@@ -241,16 +243,14 @@ if news_items:
         link = article.get("news_url", "#")
         source = article.get("source_name", "Unknown Source")
         date = article.get("date", "Unknown Date")
+        description = article.get("description", "")
 
-    st.markdown(f"**[{title}]({link})**")
-    st.caption(f"{source} – {date}")
-
+        st.markdown(f"🔗 [**{title}**]({link})")
+        st.caption(f"{source} – {date}")
+        if description:
+            st.write(description)
 else:
-    for article in FALLBACK_NEWS:
-        st.markdown(f"**{article['title']}**")
-        st.caption(f"{article['feedDate']}")
-        st.write(article['description'])
-
+    st.info("No news found at the moment.")
 
 # --- AUTO REFRESH ---
 st_autorefresh(interval=refresh_interval * 1000, key="auto_refresh")
