@@ -201,7 +201,8 @@ if show_history:
         
 # --- CRYPTO NEWS SECTION WITH FALLBACK ---
 def get_crypto_news():
-    url = "https://cryptonews-api.com/api/v1?tickers=BTC,ETH,DOGE,LTC&items=5&token=demo"
+    url = "https://cryptonews-api.com/api/v1?tickers=BTC,ETH,DOGE,LTC&items=5&token=YOUR_REAL_API_KEY"
+
     try:
         res = requests.get(url, timeout=10)
         clean_text = res.text.strip().split("\n")[0]
