@@ -235,6 +235,7 @@ FALLBACK_NEWS = [
 # --- DISPLAY NEWS ---
 st.markdown("---")
 st.subheader("📰 Latest Crypto News")
+
 news_items = get_crypto_news()
 
 if news_items:
@@ -245,7 +246,10 @@ if news_items:
         date = article.get("date", "Unknown Date")
         description = article.get("description", "")
 
-        st.markdown(f"🔗 [**{title}**]({link})")
+        st.markdown(
+            f'<a href="{link}" target="_blank" style="text-decoration: none; color: #1f77b4;"><strong>🔗 {title}</strong></a>',
+            unsafe_allow_html=True
+        )
         st.caption(f"{source} – {date}")
         if description:
             st.write(description)
