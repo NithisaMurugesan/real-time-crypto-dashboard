@@ -18,6 +18,13 @@ coin_options = {
     "Litecoin (LTC)": "LTCUSDT"
 }
 
+coingecko_ids = {
+    "BTCUSDT": "bitcoin",
+    "ETHUSDT": "ethereum",
+    "DOGEUSDT": "dogecoin",
+    "LTCUSDT": "litecoin"
+}
+
 # --- SIDEBAR CONTROLS ---
 with st.sidebar:
     st.header("⚙️ Dashboard Controls")
@@ -25,17 +32,28 @@ with st.sidebar:
     refresh_interval = st.slider("Refresh Interval (seconds)", 30, 90, 60)
 
 coin_id = coin_options[selected_label]
+cg_id = coingecko_ids[coin_id]
+
 st.title(f"📈 Real-Time {selected_label} Price Tracker")
 
-# --- GET PRICE FROM BINANCE ---
-def get_price(coin_id):
-    url = f"https://api.binance.com/api/v3/ticker/price?symbol={coin_id}"
+# --- GET PRICE FROM COINGECKO ---
+def get_price(cg_id):
+    url = f"https://api.coingecko.com/api/v3/simple/price?ids={cg_id}&vs_currencies=usd"
     try:
         res = requests.get(url, timeout=10)
         data = res.json()
-        return float(data["price"])
+
+        # 💥 Show raw response (optional debug)
+        st.code(str(data), language="json")
+
+        if cg_id in data and "usd" in data[cg_id]:
+            return float(data[cg_id]["usd"])
+        else:
+            st.error(f"Invalid response: {data}")
+            return None
+
     except Exception as e:
-        st.error(f"Failed to fetch price for {coin_id}: {e}")
+        st.error(f"Failed to fetch price for {cg_id}: {e}")
         return None
 
 # --- SESSION STATE ---
@@ -43,8 +61,8 @@ if f"prices_{coin_id}" not in st.session_state:
     st.session_state[f"prices_{coin_id}"] = []
     st.session_state[f"times_{coin_id}"] = []
 
-# --- FETCH AND STORE PRICE ---
-price = get_price(coin_id)
+# --- FETCH + STORE PRICE ---
+price = get_price(cg_id)
 if price is not None:
     st.session_state[f"prices_{coin_id}"].append(price)
     st.session_state[f"times_{coin_id}"].append(time.strftime("%H:%M:%S"))
@@ -81,4 +99,4 @@ st_autorefresh(interval=refresh_interval * 1000, key="auto_refresh")
 
 # --- FOOTER ---
 st.markdown("---")
-st.caption("Made using Python + Streamlit + Binance API")
+st.caption("Made using Python + Streamlit + CoinGecko API")
