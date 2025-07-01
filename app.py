@@ -237,8 +237,14 @@ news_items = get_crypto_news()
 
 if news_items:
     for article in news_items:
-        st.markdown(f"**[{article['title']}]({article['news_url']})**")
-        st.caption(f"{article['source_name']} – {article['date']}")
+        title = article.get("title", "No Title")
+        link = article.get("news_url", "#")
+        source = article.get("source_name", "Unknown Source")
+        date = article.get("date", "Unknown Date")
+
+    st.markdown(f"**[{title}]({link})**")
+    st.caption(f"{source} – {date}")
+
 else:
     for article in FALLBACK_NEWS:
         st.markdown(f"**{article['title']}**")
