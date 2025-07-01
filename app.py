@@ -60,24 +60,33 @@ def get_price_and_change(coin_id):
     except Exception as e:
         st.error(f"💥 Error fetching data: {e}")
         return None, None
-
+# ---7 DAY HISTORY CHART---
 def get_7_day_history(coin_id):
-    url = f"https://api.coingecko.com/api/v3/coins/{coin_id}/market_chart?vs_currency=usd&days=7"
+    url = f"https://api.coingecko.com/api/v3/coins/{coin_id}/market_chart"
+    params = {
+        "vs_currency": "usd",
+        "days": "7",
+        "interval": "daily"
+    }
     try:
-        res = requests.get(url, timeout=10)
+        res = requests.get(url, params=params, timeout=10)
         data = res.json()
-        prices = data["prices"]  # List of [timestamp, price]
+
+        if "prices" not in data:
+            st.error("⚠️ CoinGecko did not return price history. Full response:")
+            st.json(data)
+            return [], []
+
+        prices = data["prices"]
         dates = [time.strftime("%b %d", time.gmtime(p[0] / 1000)) for p in prices]
         values = [p[1] for p in prices]
+
         return dates, values
+
     except Exception as e:
         st.error(f"💥 Error fetching 7-day history: {e}")
         return [], []
 
-# --- SESSION STATE ---
-if f"prices_{coin_id}" not in st.session_state:
-    st.session_state[f"prices_{coin_id}"] = []
-    st.session_state[f"times_{coin_id}"] = []
 
 # --- FETCH LIVE DATA ---
 price, percent_change = get_price_and_change(cg_id)
