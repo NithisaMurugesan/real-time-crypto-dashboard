@@ -204,21 +204,16 @@ def get_crypto_news():
     url = "https://cryptonews-api.com/api/v1?tickers=BTC,ETH,DOGE,LTC&items=5&token=demo"
     try:
         res = requests.get(url, timeout=10)
-
-        # 💄 Some APIs return multiple JSON blobs or extra text
         clean_text = res.text.strip().split("\n")[0]
-
         data = json.loads(clean_text)
 
         if "data" in data and isinstance(data["data"], list):
             return data["data"]
         else:
-            st.warning("No news available right now.")
-            return []
-
+            return FALLBACK_NEWS  # fallback if structure is wrong
     except Exception as e:
-        st.error(f"💥 Error fetching news: {e}")
-        return []
+        st.warning(f"💥 Couldn't fetch live news. Showing fallback.")
+        return FALLBACK_NEWS
 
 
 FALLBACK_NEWS = [
