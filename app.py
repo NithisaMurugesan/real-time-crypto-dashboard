@@ -4,6 +4,12 @@ import requests
 import time
 from streamlit_autorefresh import st_autorefresh
 
+st.write("""
+Welcome to the Real-Time Crypto Tracker! 🚀  
+Track live price changes for your favorite cryptocurrencies like Bitcoin, Ethereum, Dogecoin and Litecoin.  
+This dashboard auto-refreshes, plots price history, and even shows 24hr percentage changes!
+""")
+
 st.set_page_config(
     page_title="💹 Real-Time Crypto Dashboard",
     layout="wide",
@@ -28,6 +34,7 @@ coingecko_ids = {
 # --- SIDEBAR CONTROLS ---
 with st.sidebar:
     st.header("⚙️ Dashboard Controls")
+    st.sidebar.subheader("📊 Live Coin Selection")
     selected_label = st.selectbox("Choose a coin to track:", list(coin_options.keys()))
     refresh_interval = st.slider("Refresh Interval (seconds)", 30, 90, 60)
 
