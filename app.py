@@ -200,62 +200,43 @@ if show_history:
         st.plotly_chart(fig_history, use_container_width=True)
         
 # --- CRYPTO NEWS SECTION WITH FALLBACK ---
+# --- CRYPTO NEWS (via NewsData.io) ---
 def get_crypto_news():
-    url = "https://cryptonews-api.com/api/v1?tickers=BTC,ETH,DOGE,LTC&items=5&token=pub_04e3d6dbaeec49eebd1fcd5f0f7ef6dd"
-
-    try:
-        res = requests.get(url, timeout=10)
-        clean_text = res.text.strip().split("\n")[0]
-        data = json.loads(clean_text)
-
-        if "data" in data and isinstance(data["data"], list):
-            return data["data"]
-        else:
-            return FALLBACK_NEWS
-    except Exception as e:
-        st.warning(f"💥 Couldn't fetch live news. Showing fallback.")
-        return FALLBACK_NEWS
-
-FALLBACK_NEWS = [
-    {
-        "title": "Welcome to Your Crypto Dashboard! 🚀",
-        "news_url": "#",
-        "source_name": "CryptoBot",
-        "date": time.strftime("%Y-%m-%d"),
-        "description": "Your dashboard is live — more news will appear here when available."
-    },
-    {
-        "title": "Pro Tip: Check Volume & Volatility Next!",
-        "news_url": "#",
-        "source_name": "Dashboard Guide",
-        "date": time.strftime("%Y-%m-%d"),
-        "description": "Traders often watch volume spikes to catch big moves."
+    url = "https://newsdata.io/api/1/news"
+    params = {
+        "apikey": "pub_04e3d6dbaeec49eebd1fcd5f0f7ef6dd",
+        "q": "crypto",
+        "language": "en",
+        "category": "business"
     }
-]
+    try:
+        res = requests.get(url, params=params, timeout=10)
+        data = res.json()
+        if "results" in data and isinstance(data["results"], list):
+            return data["results"]
+        else:
+            return []
+    except Exception as e:
+        st.warning(f"💥 Couldn't fetch live news. Error: {e}")
+        return []
 
-# --- DISPLAY NEWS ---
 st.markdown("---")
 st.subheader("📰 Latest Crypto News")
 
 news_items = get_crypto_news()
 
 if news_items:
-    for article in news_items:
+    for article in news_items[:5]:  # Show only top 5
         title = article.get("title", "No Title")
-        link = article.get("news_url", "#")
-        source = article.get("source_name", "Unknown Source")
-        date = article.get("date", "Unknown Date")
-        description = article.get("description", "")
+        link = article.get("link", "#")
+        source = article.get("source_id", "Unknown")
+        date = article.get("pubDate", "Unknown Date")
 
-        st.markdown(
-            f'<a href="{link}" target="_blank" style="text-decoration: none; color: #1f77b4;"><strong>🔗 {title}</strong></a>',
-            unsafe_allow_html=True
-        )
+        st.markdown(f"**[{title}]({link})**", unsafe_allow_html=True)
         st.caption(f"{source} – {date}")
-        if description:
-            st.write(description)
 else:
-    st.info("No news found at the moment.")
+    st.info("No live crypto news available right now.")
+
 
 # --- AUTO REFRESH ---
 st_autorefresh(interval=refresh_interval * 1000, key="auto_refresh")
