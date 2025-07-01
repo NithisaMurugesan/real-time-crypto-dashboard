@@ -37,20 +37,20 @@ cg_id = coingecko_ids[coin_id]
 st.title(f"📈 Real-Time {selected_label} Price Tracker")
 
 # --- GET PRICE FROM BINANCE ---
-def get_price_and_change(coin_id):
-    url = f"https://api.binance.com/api/v3/ticker/24hr?symbol={coin_id}"
+def get_price_and_change(cg_id):
+    url = f"https://api.coingecko.com/api/v3/simple/price?ids={cg_id}&vs_currencies=usd&include_24hr_change=true"
     try:
         res = requests.get(url, timeout=10)
         data = res.json()
-        st.write("DEBUG BINANCE RESPONSE:", data)  # 👀 See what’s going wrong
+        st.write("DEBUG COINGECKO RESPONSE:", data)  # You can remove this after testing
 
-        current_price = float(data.get("lastPrice", 0))
-        percent_change = float(data.get("priceChangePercent", 0))
-
+        current_price = float(data[cg_id]["usd"])
+        percent_change = float(data[cg_id]["usd_24h_change"])
         return current_price, percent_change
     except Exception as e:
-        st.error(f"Error fetching data: {e}")
+        st.error(f"Error fetching data from CoinGecko: {e}")
         return None, None
+
 
 # --- SESSION STATE ---
 if f"prices_{coin_id}" not in st.session_state:
@@ -58,7 +58,8 @@ if f"prices_{coin_id}" not in st.session_state:
     st.session_state[f"times_{coin_id}"] = []
 
 # --- FETCH + STORE PRICE ---
-price, percent_change = get_price_and_change(coin_id)
+price, percent_change = get_price_and_change(cg_id)
+
 if price is not None:
     st.session_state[f"prices_{coin_id}"].append(price)
     st.session_state[f"times_{coin_id}"].append(time.strftime("%H:%M:%S"))
