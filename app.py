@@ -230,9 +230,14 @@ if not news_items:
     news_items = FALLBACK_NEWS
 
 for article in news_items:
-    st.markdown(f"### [{article['title']}]({article.get('link','')})")
-    st.write(f"🕒 {article.get('feedDate','')}")
-    st.write(article.get('description', "No description available."))
+    title = article.get("title", "No title")
+    link = article.get("link", "#")
+    date = article.get("feedDate", "")
+    desc = article.get("description", "No description.")
+
+    st.markdown(f"### [{title}]({link})", unsafe_allow_html=True)
+    st.caption(f"🕒 Published on: {date}")
+    st.write(desc)
     st.markdown("---")
 
 
