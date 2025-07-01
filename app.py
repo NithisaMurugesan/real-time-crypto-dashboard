@@ -198,9 +198,6 @@ if show_history:
         )
         st.plotly_chart(fig_history, use_container_width=True)
 
-# --- AUTO REFRESH ---
-st_autorefresh(interval=refresh_interval * 1000, key="auto_refresh")
-
 # --- CRYPTO NEWS SECTION ---
 def get_crypto_news():
     url = "https://cryptocontrol.io/api/v1/public/news"
@@ -221,6 +218,8 @@ for article in news_data:
     st.write(f"🕒 {article['publishedAt'].split('T')[0]}")
     st.write(article['description'] or "No description provided.")
     st.markdown("---")
+# --- AUTO REFRESH ---
+st_autorefresh(interval=refresh_interval * 1000, key="auto_refresh")
 
 # --- FOOTER ---
 st.markdown("---")
