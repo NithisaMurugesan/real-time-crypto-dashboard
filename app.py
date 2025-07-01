@@ -198,13 +198,13 @@ if show_history:
         )
         st.plotly_chart(fig_history, use_container_width=True)
 
-# --- CRYPTO NEWS SECTION ---
+# --- COINSTATS NEWS ---
 def get_crypto_news():
-    url = "https://cryptonews-api.com/api/v1?tickers=BTC,ETH,DOGE,LTC&items=5&token=demo"
+    url = "https://api.coinstats.app/public/v1/news?skip=0&limit=5"
     try:
         res = requests.get(url, timeout=10)
         data = res.json()
-        return data.get("data", [])
+        return data.get("news", [])
     except Exception as e:
         st.error(f"💥 Error fetching news: {e}")
         return []
@@ -215,13 +215,12 @@ st.subheader("🗞️ Latest Crypto News")
 news_data = get_crypto_news()
 if news_data:
     for article in news_data:
-        st.markdown(f"### [{article['title']}]({article['news_url']})")
-        st.write(f"🕒 {article['date'].split('T')[0]}")
-        st.write(article['text'] or "No description available.")
+        st.markdown(f"### [{article['title']}]({article['link']})")
+        st.write(f"🕒 {article['feedDate'].split('T')[0]}")
+        st.write(article.get('description', "No description available."))
         st.markdown("---")
 else:
     st.info("No news available right now.")
-
 
 # --- FOOTER ---
 st.markdown("---")
