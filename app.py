@@ -197,30 +197,47 @@ if show_history:
             margin=dict(l=20, r=20, t=40, b=20),
         )
         st.plotly_chart(fig_history, use_container_width=True)
-
-# --- COINSTATS NEWS ---
+## --- CRYPTO NEWS SECTION WITH FALLBACK ---
 def get_crypto_news():
     url = "https://api.coinstats.app/public/v1/news?skip=0&limit=5"
     try:
-        res = requests.get(url, timeout=10)
+        res = requests.get(url, timeout=5)
         data = res.json()
         return data.get("news", [])
-    except Exception as e:
-        st.error(f"💥 Error fetching news: {e}")
+    except Exception:
         return []
+
+FALLBACK_NEWS = [
+    {
+        "title": "Welcome to Your Crypto Dashboard! 🚀",
+        "link": "#",
+        "feedDate": time.strftime("%Y-%m-%d"),
+        "description": "Your dashboard is live — more news will appear here when available."
+    },
+    {
+        "title": "Pro Tip: Check Volume & Volatility Next!",
+        "link": "#",
+        "feedDate": time.strftime("%Y-%m-%d"),
+        "description": "Traders often watch volume spikes to catch big moves."
+    }
+]
 
 st.markdown("---")
 st.subheader("🗞️ Latest Crypto News")
 
-news_data = get_crypto_news()
-if news_data:
-    for article in news_data:
-        st.markdown(f"### [{article['title']}]({article['link']})")
-        st.write(f"🕒 {article['feedDate'].split('T')[0]}")
-        st.write(article.get('description', "No description available."))
-        st.markdown("---")
-else:
-    st.info("No news available right now.")
+news_items = get_crypto_news()
+if not news_items:
+    news_items = FALLBACK_NEWS
+
+for article in news_items:
+    st.markdown(f"### [{article['title']}]({article.get('link','')})")
+    st.write(f"🕒 {article.get('feedDate','')}")
+    st.write(article.get('description', "No description available."))
+    st.markdown("---")
+
+
+# --- AUTO REFRESH ---
+st_autorefresh(interval=refresh_interval * 1000, key="auto_refresh")
 
 # --- FOOTER ---
 st.markdown("---")
