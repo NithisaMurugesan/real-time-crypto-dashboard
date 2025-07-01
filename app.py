@@ -30,10 +30,15 @@ with st.sidebar:
     st.header("⚙️ Dashboard Controls")
     st.subheader("📊 Live Coin Selection")
     selected_label = st.selectbox("Choose a coin to track:", list(coin_options.keys()))
+    selected_coins = st.sidebar.multiselect(
+    "💹 Select coins to compare:",
+    options=list(coin_options.keys()),
+    default=["Bitcoin (BTC)", "Ethereum (ETH)"]
+    )
     refresh_interval = st.slider("Refresh Interval (seconds)", 30, 90, 60)
     show_converter = st.checkbox("💱 Show INR Equivalent")
     show_history = st.checkbox("📅 Show 7-Day History")
-
+    
 # --- COIN IDS ---
 coin_id = coin_options[selected_label]
 cg_id = coingecko_ids[coin_id]
@@ -62,6 +67,55 @@ def get_price_and_change(coin_id):
     except Exception as e:
         st.error(f"💥 Error fetching data: {e}")
         return None, None
+
+coin_data = []
+
+for label in selected_coins:
+    coin_id = coin_options[label]
+    cg_id = coingecko_ids[coin_id]
+    price, change = get_price_and_change(cg_id)
+    if price is not None:
+        coin_data.append({
+            "label": label,
+            "price": price,
+            "change": change
+        })
+if coin_data:
+    st.subheader("📊 Coin Comparison")
+    st.dataframe([
+        {
+            "Coin": coin["label"],
+            "Price (USD)": f"${coin['price']:.2f}",
+            "24h Change (%)": f"{coin['change']:.2f}"
+        } for coin in coin_data
+    ])
+fig = go.Figure()
+
+for coin in coin_data:
+    label = coin["label"]
+    coin_id = coin_options[label]
+    if f"prices_{coin_id}" not in st.session_state:
+        st.session_state[f"prices_{coin_id}"] = []
+        st.session_state[f"times_{coin_id}"] = []
+
+    st.session_state[f"prices_{coin_id}"].append(coin["price"])
+    st.session_state[f"times_{coin_id}"].append(time.strftime("%H:%M:%S"))
+
+    fig.add_trace(go.Scatter(
+        x=st.session_state[f"times_{coin_id}"],
+        y=st.session_state[f"prices_{coin_id}"],
+        mode='lines+markers',
+        name=label
+    ))
+
+fig.update_layout(
+    title="📈 Multi-Coin Price Comparison",
+    xaxis_title="Time",
+    yaxis_title="Price (USD)",
+    template="plotly_dark",
+    margin=dict(l=20, r=20, t=40, b=20),
+)
+st.plotly_chart(fig, use_container_width=True)
 
 # --- 7-DAY HISTORY FUNCTION ---
 def get_7_day_history(coin_id):
