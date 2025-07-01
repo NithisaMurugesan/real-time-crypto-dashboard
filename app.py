@@ -67,8 +67,23 @@ def get_price_and_change(coin_id):
     except Exception as e:
         st.error(f"💥 Error fetching data: {e}")
         return None, None
-
+# --- COMPARISON TABLE AND CHART ---
 coin_data = []
+import pandas as pd
+
+# Add this after creating coin_data
+df = pd.DataFrame(coin_data)
+df["Price (USD)"] = df["price"].map(lambda x: f"${x:.2f}")
+df["24h Change (%)"] = df["change"].map(lambda x: f"{x:.2f}")
+df = df[["label", "Price (USD)", "24h Change (%)"]]
+df.columns = ["Coin", "Price (USD)", "24h Change (%)"]
+
+st.download_button(
+    label="⬇️ Download Data as CSV",
+    data=df.to_csv(index=False).encode('utf-8'),
+    file_name="crypto_data.csv",
+    mime='text/csv'
+)
 
 for label in selected_coins:
     coin_id = coin_options[label]
@@ -107,6 +122,11 @@ for coin in coin_data:
         mode='lines+markers',
         name=label
     ))
+alert_threshold = 5  # you can tweak this later
+
+for coin in coin_data:
+    if abs(coin['change']) >= alert_threshold:
+        st.warning(f"🚨 {coin['label']} is on the move! 24h change: {coin['change']:.2f}%")
 
 fig.update_layout(
     title="📈 Multi-Coin Price Comparison",
