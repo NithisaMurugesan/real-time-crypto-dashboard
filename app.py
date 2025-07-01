@@ -61,6 +61,19 @@ def get_price_and_change(coin_id):
         st.error(f"💥 Error fetching data: {e}")
         return None, None
 
+def get_7_day_history(coin_id):
+    url = f"https://api.coingecko.com/api/v3/coins/{coin_id}/market_chart?vs_currency=usd&days=7"
+    try:
+        res = requests.get(url, timeout=10)
+        data = res.json()
+        prices = data["prices"]  # List of [timestamp, price]
+        dates = [time.strftime("%b %d", time.gmtime(p[0] / 1000)) for p in prices]
+        values = [p[1] for p in prices]
+        return dates, values
+    except Exception as e:
+        st.error(f"💥 Error fetching 7-day history: {e}")
+        return [], []
+
 # --- SESSION STATE ---
 if f"prices_{coin_id}" not in st.session_state:
     st.session_state[f"prices_{coin_id}"] = []
@@ -105,6 +118,28 @@ with col2:
             margin=dict(l=20, r=20, t=40, b=20),
         )
         st.plotly_chart(fig, use_container_width=True)
+if show_history:
+    st.subheader("📅 7-Day Price History")
+
+    history_dates, history_prices = get_7_day_history(cg_id)
+    if history_prices:
+        fig_history = go.Figure()
+        fig_history.add_trace(go.Scatter(
+            x=history_dates,
+            y=history_prices,
+            mode='lines+markers',
+            line=dict(color='deepskyblue'),
+            marker=dict(size=6),
+            name='7-Day History'
+        ))
+        fig_history.update_layout(
+            title=f"{selected_label} - Last 7 Days",
+            xaxis_title="Date",
+            yaxis_title="Price (USD)",
+            template="plotly_dark",
+            margin=dict(l=20, r=20, t=40, b=20),
+        )
+        st.plotly_chart(fig_history, use_container_width=True)
 
 # --- AUTO REFRESH ---
 st_autorefresh(interval=refresh_interval * 1000, key="auto_refresh")
