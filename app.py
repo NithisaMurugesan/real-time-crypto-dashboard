@@ -231,14 +231,17 @@ if not news_items:
 
 for article in news_items:
     title = article.get("title", "No title")
-    link = article.get("link", "#")
-    date = article.get("feedDate", "")
-    desc = article.get("description", "No description.")
+    url = article.get("url") or article.get("link", "#")  # Try both keys
+    date = article.get("published_at") or article.get("feedDate", "")
+    desc = article.get("description", "No description")
 
-    st.markdown(f"### [{title}]({link})", unsafe_allow_html=True)
-    st.caption(f"🕒 Published on: {date}")
+    st.markdown(f"### 🔗 [{title}]({url})", unsafe_allow_html=True)
+    if date:
+        st.caption(f"🕒 {date}")
     st.write(desc)
     st.markdown("---")
+st.json(news_items[0])
+
 
 
 # --- AUTO REFRESH ---
