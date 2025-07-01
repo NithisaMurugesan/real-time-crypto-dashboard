@@ -4,6 +4,7 @@ import requests
 import time
 import pandas as pd
 from streamlit_autorefresh import st_autorefresh
+import json
 
 st.set_page_config(
     page_title="💹 Real-Time Crypto Dashboard",
@@ -197,15 +198,28 @@ if show_history:
             margin=dict(l=20, r=20, t=40, b=20),
         )
         st.plotly_chart(fig_history, use_container_width=True)
+        
 ## --- CRYPTO NEWS SECTION WITH FALLBACK ---
 def get_crypto_news():
-    url = "https://api.coinstats.app/public/v1/news?skip=0&limit=5"
+    url = "https://cryptonews-api.com/api/v1?tickers=BTC,ETH,DOGE,LTC&items=5&token=demo"
     try:
-        res = requests.get(url, timeout=5)
-        data = res.json()
-        return data.get("news", [])
-    except Exception:
+        res = requests.get(url, timeout=10)
+
+        # 💄 Some APIs return multiple JSON blobs or extra text
+        clean_text = res.text.strip().split("\n")[0]
+
+        data = json.loads(clean_text)
+
+        if "data" in data and isinstance(data["data"], list):
+            return data["data"]
+        else:
+            st.warning("No news available right now.")
+            return []
+
+    except Exception as e:
+        st.error(f"💥 Error fetching news: {e}")
         return []
+
 
 FALLBACK_NEWS = [
     {
@@ -223,25 +237,18 @@ FALLBACK_NEWS = [
 ]
 
 st.markdown("---")
-st.subheader("🗞️ Latest Crypto News")
-
+st.subheader("📰 Latest Crypto News")
 news_items = get_crypto_news()
-if not news_items:
-    news_items = FALLBACK_NEWS
 
-for article in news_items:
-    title = article.get("title", "No title")
-    url = article.get("url") or article.get("link", "#")  # Try both keys
-    date = article.get("published_at") or article.get("feedDate", "")
-    desc = article.get("description", "No description")
-
-    st.markdown(f"### 🔗 [{title}]({url})", unsafe_allow_html=True)
-    if date:
-        st.caption(f"🕒 {date}")
-    st.write(desc)
-    st.markdown("---")
-st.json(news_items[0])
-
+if news_items:
+    for article in news_items:
+        st.markdown(f"**[{article['title']}]({article['news_url']})**")
+        st.caption(f"{article['source_name']} – {article['date']}")
+else:
+    for article in FALLBACK_NEWS:
+        st.markdown(f"**{article['title']}**")
+        st.caption(f"{article['feedDate']}")
+        st.write(article['description'])
 
 
 # --- AUTO REFRESH ---
