@@ -36,25 +36,18 @@ cg_id = coingecko_ids[coin_id]
 
 st.title(f"📈 Real-Time {selected_label} Price Tracker")
 
-# --- GET PRICE FROM COINGECKO ---
-def get_price(cg_id):
-    url = f"https://api.coingecko.com/api/v3/simple/price?ids={cg_id}&vs_currencies=usd"
+# --- GET PRICE FROM BINANCE ---
+def get_price_and_change(coin_id):
+    url = f"https://api.binance.com/api/v3/ticker/24hr?symbol={coin_id}"
     try:
         res = requests.get(url, timeout=10)
         data = res.json()
-
-        # 💥 Show raw response (optional debug)
-        st.code(str(data), language="json")
-
-        if cg_id in data and "usd" in data[cg_id]:
-            return float(data[cg_id]["usd"])
-        else:
-            st.error(f"Invalid response: {data}")
-            return None
-
+        current_price = float(data["lastPrice"])
+        percent_change = float(data["priceChangePercent"])
+        return current_price, percent_change
     except Exception as e:
-        st.error(f"Failed to fetch price for {cg_id}: {e}")
-        return None
+        st.error(f"Error fetching data: {e}")
+        return None, None
 
 # --- SESSION STATE ---
 if f"prices_{coin_id}" not in st.session_state:
@@ -62,7 +55,7 @@ if f"prices_{coin_id}" not in st.session_state:
     st.session_state[f"times_{coin_id}"] = []
 
 # --- FETCH + STORE PRICE ---
-price = get_price(cg_id)
+price, percent_change = get_price_and_change(coin_id)
 if price is not None:
     st.session_state[f"prices_{coin_id}"].append(price)
     st.session_state[f"times_{coin_id}"].append(time.strftime("%H:%M:%S"))
@@ -71,7 +64,12 @@ if price is not None:
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
     if price is not None:
-        st.metric(label=f"{selected_label} Price (USD)", value=f"${price}")
+        st.metric(
+            label=f"{selected_label} Price (USD)",
+            value=f"${price:.2f}",
+            delta=f"{percent_change:.2f}%",
+            delta_color="normal" if percent_change == 0 else ("inverse" if percent_change < 0 else "off")
+        )
 
         fig = go.Figure()
         fig.add_trace(go.Scatter(
