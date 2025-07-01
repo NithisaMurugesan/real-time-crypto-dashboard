@@ -39,7 +39,7 @@ with st.sidebar:
 
     # ✅ History Chart toggle
     show_history = st.checkbox("📅 Show 7-Day History")
-
+   
 # --- SET COIN IDs ---
 coin_id = coin_options[selected_label]
 cg_id = coingecko_ids[coin_id]  # 💋 this is the new line
@@ -53,15 +53,25 @@ def get_price_and_change(coin_id):
     try:
         res = requests.get(url, timeout=10)
         data = res.json()
+
+        # 💥 Show full data if something goes wrong
+        if 'market_data' not in data:
+            st.error("⚠️ CoinGecko did not return market data. Full response:")
+            st.json(data)
+            return None, None, None, None, None
+
         current_price = float(data['market_data']['current_price']['usd'])
         percent_change = float(data['market_data']['price_change_percentage_24h'])
         high = float(data['market_data']['high_24h']['usd'])
         low = float(data['market_data']['low_24h']['usd'])
         volume = float(data['market_data']['total_volume']['usd'])
+
         return current_price, percent_change, high, low, volume
+
     except Exception as e:
-        st.error(f"Error fetching data: {e}")
+        st.error(f" Error fetching data from CoinGecko: {e}")
         return None, None, None, None, None
+
 
     
 price, percent_change, high, low, volume = get_price_and_change(cg_id)
