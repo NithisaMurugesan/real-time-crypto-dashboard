@@ -200,11 +200,11 @@ if show_history:
 
 # --- CRYPTO NEWS SECTION ---
 def get_crypto_news():
-    url = "https://cryptocontrol.io/api/v1/public/news"
+    url = "https://cryptonews-api.com/api/v1?tickers=BTC,ETH,DOGE,LTC&items=5&token=demo"
     try:
         res = requests.get(url, timeout=10)
         data = res.json()
-        return data[:5]  # Show top 5 articles
+        return data.get("data", [])
     except Exception as e:
         st.error(f"💥 Error fetching news: {e}")
         return []
@@ -213,13 +213,15 @@ st.markdown("---")
 st.subheader("🗞️ Latest Crypto News")
 
 news_data = get_crypto_news()
-for article in news_data:
-    st.markdown(f"### [{article['title']}]({article['url']})")
-    st.write(f"🕒 {article['publishedAt'].split('T')[0]}")
-    st.write(article['description'] or "No description provided.")
-    st.markdown("---")
-# --- AUTO REFRESH ---
-st_autorefresh(interval=refresh_interval * 1000, key="auto_refresh")
+if news_data:
+    for article in news_data:
+        st.markdown(f"### [{article['title']}]({article['news_url']})")
+        st.write(f"🕒 {article['date'].split('T')[0]}")
+        st.write(article['text'] or "No description available.")
+        st.markdown("---")
+else:
+    st.info("No news available right now.")
+
 
 # --- FOOTER ---
 st.markdown("---")
