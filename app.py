@@ -42,8 +42,11 @@ def get_price_and_change(coin_id):
     try:
         res = requests.get(url, timeout=10)
         data = res.json()
-        current_price = float(data["lastPrice"])
-        percent_change = float(data["priceChangePercent"])
+        st.write("DEBUG BINANCE RESPONSE:", data)  # 👀 See what’s going wrong
+
+        current_price = float(data.get("lastPrice", 0))
+        percent_change = float(data.get("priceChangePercent", 0))
+
         return current_price, percent_change
     except Exception as e:
         st.error(f"Error fetching data: {e}")
