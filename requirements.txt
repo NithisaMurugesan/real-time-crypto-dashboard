@@ -1,0 +1,7 @@
+streamlit
+requests
+matplotlib
+streamlit-autorefresh
+git add requirements.txt
+git commit -m "Added requirements.txt so my app behaves online 😤"
+git push
