@@ -29,38 +29,41 @@ coingecko_ids = {
 with st.sidebar:
     st.header("⚙️ Dashboard Controls")
     st.subheader("📊 Live Coin Selection")
-
     selected_label = st.selectbox("Choose a coin to track:", list(coin_options.keys()))
     refresh_interval = st.slider("Refresh Interval (seconds)", 30, 90, 60)
     show_converter = st.checkbox("💱 Show INR Equivalent")
     show_history = st.checkbox("📅 Show 7-Day History")
 
-# --- SET COIN IDs ---
+# --- COIN IDS ---
 coin_id = coin_options[selected_label]
 cg_id = coingecko_ids[coin_id]
 
+# --- INIT SESSION STATE ---
+if f"prices_{coin_id}" not in st.session_state:
+    st.session_state[f"prices_{coin_id}"] = []
+if f"times_{coin_id}" not in st.session_state:
+    st.session_state[f"times_{coin_id}"] = []
+
 st.title(f"📈 Real-Time {selected_label} Price Tracker")
 
-# --- PRICE FUNCTION ---
+# --- LIVE PRICE FUNCTION ---
 def get_price_and_change(coin_id):
     url = f"https://api.coingecko.com/api/v3/simple/price?ids={coin_id}&vs_currencies=usd&include_24hr_change=true"
     try:
         res = requests.get(url, timeout=10)
         data = res.json()
-
         if coin_id not in data:
             st.error("⚠️ CoinGecko did not return valid data.")
             st.json(data)
             return None, None
-
         current_price = float(data[coin_id]['usd'])
         percent_change = float(data[coin_id]['usd_24h_change'])
         return current_price, percent_change
-
     except Exception as e:
         st.error(f"💥 Error fetching data: {e}")
         return None, None
-# ---7 DAY HISTORY CHART---
+
+# --- 7-DAY HISTORY FUNCTION ---
 def get_7_day_history(coin_id):
     url = f"https://api.coingecko.com/api/v3/coins/{coin_id}/market_chart"
     params = {
@@ -71,30 +74,25 @@ def get_7_day_history(coin_id):
     try:
         res = requests.get(url, params=params, timeout=10)
         data = res.json()
-
         if "prices" not in data:
             st.error("⚠️ CoinGecko did not return price history. Full response:")
             st.json(data)
             return [], []
-
         prices = data["prices"]
         dates = [time.strftime("%b %d", time.gmtime(p[0] / 1000)) for p in prices]
         values = [p[1] for p in prices]
-
         return dates, values
-
     except Exception as e:
         st.error(f"💥 Error fetching 7-day history: {e}")
         return [], []
 
-
-# --- FETCH LIVE DATA ---
+# --- FETCH DATA ---
 price, percent_change = get_price_and_change(cg_id)
 if price is not None:
     st.session_state[f"prices_{coin_id}"].append(price)
     st.session_state[f"times_{coin_id}"].append(time.strftime("%H:%M:%S"))
 
-# --- DISPLAY ---
+# --- DISPLAY LIVE METRIC + CHART ---
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
     if price is not None:
@@ -108,7 +106,6 @@ with col2:
         if show_converter:
             st.write(f"💸 INR Equivalent: ₹ {price * 83.2:.2f}")
 
-        # Chart
         fig = go.Figure()
         fig.add_trace(go.Scatter(
             x=st.session_state[f"times_{coin_id}"],
@@ -127,9 +124,10 @@ with col2:
             margin=dict(l=20, r=20, t=40, b=20),
         )
         st.plotly_chart(fig, use_container_width=True)
+
+# --- OPTIONAL: 7-DAY HISTORY ---
 if show_history:
     st.subheader("📅 7-Day Price History")
-
     history_dates, history_prices = get_7_day_history(cg_id)
     if history_prices:
         fig_history = go.Figure()
