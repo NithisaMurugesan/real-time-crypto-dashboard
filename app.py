@@ -5,6 +5,8 @@ import time
 import pandas as pd
 from streamlit_autorefresh import st_autorefresh
 import json
+import numpy as np
+from sklearn.linear_model import LinearRegression
 
 st.set_page_config(
     page_title="💹 Real-Time Crypto Dashboard",
@@ -66,6 +68,23 @@ def get_price_and_change(coin_id):
     except Exception as e:
         st.error(f"💥 Error fetching data: {e}")
         return None, None
+
+def predict_trend(prices):
+    if len(prices) < 10:
+        return "Not enough data"
+    
+    X = np.arange(len(prices)).reshape(-1, 1)
+    y = np.array(prices).reshape(-1, 1)
+
+    model = LinearRegression()
+    model.fit(X, y)
+
+    next_time = np.array([[len(prices)]])
+    prediction = model.predict(next_time)[0][0]
+
+    trend = "🔼 Uptrend" if prediction > prices[-1] else "🔽 Downtrend"
+    return trend
+
 
 # --- COMPARISON TABLE ---
 coin_data = []
@@ -155,6 +174,9 @@ if price is not None:
             delta=f"{percent_change:.2f}%",
             delta_color="normal" if percent_change == 0 else ("inverse" if percent_change < 0 else "off")
         )
+        trend_prediction = predict_trend(st.session_state[f"prices_{coin_id}"])
+        st.metric(label="AI Trend Prediction", value=trend_prediction)
+
         if show_converter:
             st.write(f"💸 INR Equivalent: ₹ {price * 83.2:.2f}")
         fig = go.Figure()
@@ -198,8 +220,7 @@ if show_history:
             margin=dict(l=20, r=20, t=40, b=20),
         )
         st.plotly_chart(fig_history, use_container_width=True)
-        
-# --- CRYPTO NEWS SECTION WITH FALLBACK ---
+
 # --- CRYPTO NEWS (via NewsData.io) ---
 def get_crypto_news():
     url = "https://newsdata.io/api/1/news"
@@ -236,7 +257,6 @@ if news_items:
         st.caption(f"{source} – {date}")
 else:
     st.info("No live crypto news available right now.")
-
 
 # --- AUTO REFRESH ---
 st_autorefresh(interval=refresh_interval * 1000, key="auto_refresh")
