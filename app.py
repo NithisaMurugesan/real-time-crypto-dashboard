@@ -1,4 +1,4 @@
-import streamlit as st
+''' import streamlit as st
 import plotly.graph_objects as go
 import requests
 import time
@@ -263,4 +263,130 @@ st_autorefresh(interval=refresh_interval * 1000, key="auto_refresh")
 
 # --- FOOTER ---
 st.markdown("---")
-st.caption("Made using Python + Streamlit + CoinGecko API")
+st.caption("Made using Python + Streamlit + CoinGecko API") '''
+
+import streamlit as st
+import plotly.graph_objects as go
+import requests
+import time
+import pandas as pd
+import json
+from streamlit_autorefresh import st_autorefresh
+from sklearn.linear_model import LinearRegression
+import numpy as np
+from scipy.stats import zscore
+
+st.set_page_config(
+    page_title="💹 Real-Time Crypto Dashboard with AI",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+coin_options = {
+    "Bitcoin (BTC)": "BTCUSDT",
+    "Ethereum (ETH)": "ETHUSDT",
+    "Dogecoin (DOGE)": "DOGEUSDT",
+    "Litecoin (LTC)": "LTCUSDT"
+}
+
+coingecko_ids = {
+    "BTCUSDT": "bitcoin",
+    "ETHUSDT": "ethereum",
+    "DOGEUSDT": "dogecoin",
+    "LTCUSDT": "litecoin"
+}
+
+# --- Sidebar ---
+with st.sidebar:
+    st.header("⚙️ Dashboard Controls")
+    selected_label = st.selectbox("Choose a coin to track:", list(coin_options.keys()))
+    refresh_interval = st.slider("Refresh Interval (seconds)", 30, 90, 60)
+    show_converter = st.checkbox("💱 Show INR Equivalent")
+    show_history = st.checkbox("📅 Show 7-Day History")
+    show_prediction = st.checkbox("🤖 Show AI-Based Prediction")
+    show_anomaly = st.checkbox("🚨 Enable Anomaly Detection")
+
+coin_id = coin_options[selected_label]
+cg_id = coingecko_ids[coin_id]
+
+if f"prices_{coin_id}" not in st.session_state:
+    st.session_state[f"prices_{coin_id}"] = []
+if f"times_{coin_id}" not in st.session_state:
+    st.session_state[f"times_{coin_id}"] = []
+
+st.title(f"📈 {selected_label} Live Tracker")
+
+def get_price(coin_id):
+    url = f"https://api.coingecko.com/api/v3/simple/price?ids={coin_id}&vs_currencies=usd&include_24hr_change=true"
+    try:
+        res = requests.get(url, timeout=10)
+        data = res.json()
+        return float(data[coin_id]['usd']), float(data[coin_id]['usd_24h_change'])
+    except Exception as e:
+        st.error(f"Error fetching price: {e}")
+        return None, None
+
+price, change = get_price(cg_id)
+
+if price is not None:
+    st.session_state[f"prices_{coin_id}"].append(price)
+    st.session_state[f"times_{coin_id}"].append(time.strftime("%H:%M:%S"))
+
+    # --- Main Display ---
+    col1, col2 = st.columns(2)
+    with col1:
+        st.metric(
+            label=f"{selected_label} Price (USD)",
+            value=f"${price:.2f}",
+            delta=f"{change:.2f}%"
+        )
+        if show_converter:
+            st.caption(f"💸 INR: ₹{price * 83.2:.2f}")
+
+    with col2:
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(
+            x=st.session_state[f"times_{coin_id}"],
+            y=st.session_state[f"prices_{coin_id}"],
+            mode='lines+markers',
+            line=dict(color='gold'),
+            marker=dict(size=6),
+            name='Price'
+        ))
+
+        # ✅ AI-Based Trend Prediction
+        if show_prediction and len(st.session_state[f"prices_{coin_id}"]) >= 5:
+            y = np.array(st.session_state[f"prices_{coin_id}"])
+            X = np.array(range(len(y))).reshape(-1, 1)
+            model = LinearRegression().fit(X, y)
+            future_index = len(y)
+            future_price = model.predict([[future_index]])[0]
+            fig.add_trace(go.Scatter(
+                x=[st.session_state[f"times_{coin_id}"][-1] + " +1"],
+                y=[future_price],
+                mode='markers+text',
+                marker=dict(color='deepskyblue', size=10),
+                text=[f"Predicted: ${future_price:.2f}"],
+                textposition="bottom center",
+                name="AI Prediction"
+            ))
+
+        # 🚨 Price Anomaly Detection
+        if show_anomaly and len(st.session_state[f"prices_{coin_id}"]) >= 10:
+            z_scores = zscore(st.session_state[f"prices_{coin_id}"])
+            if abs(z_scores[-1]) > 2:
+                st.warning(f"🚨 Anomaly Detected! Current price ${price:.2f} is unusual based on recent trend.")
+
+        fig.update_layout(
+            title=f"{selected_label} Price Over Time",
+            xaxis_title="Time",
+            yaxis_title="Price (USD)",
+            template="plotly_dark"
+        )
+        st.plotly_chart(fig, use_container_width=True)
+
+# --- Auto Refresh ---
+st_autorefresh(interval=refresh_interval * 1000, key="auto_refresh")
+
+st.markdown("---")
+st.caption("Built with 🐍 Python + Streamlit + CoinGecko API + scikit-learn")
