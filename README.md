@@ -73,3 +73,13 @@ git clone https://github.com/NithisaMurugesan/real-time-crypto-dashboard.git
 cd real-time-crypto-dashboard
 pip install -r requirements.txt
 streamlit run app.py
+
+
+
+
+DASHBOARD DEMO SCREENSHOTS --->
+![Demo Screenshot 1 - Dashboard Controls & Coin comparison](images/demo2.png)
+![Demo Screenshot 2 - Latest Crypto News](images/demo3.png)
+![Demo Screenshot 3 - 7-Day Price History Chart](images/demo5.png)
+![Demo Screenshot 4 - Multi-Coin Price Comparison Chart and Table](images/demo6.png)
+![Demo Screenshot 5 - BTC Price Over Time Chart and AI Trend Analysis with INR equivalent](images/demo7.png)
