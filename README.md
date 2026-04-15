@@ -73,7 +73,7 @@ git clone https://github.com/NithisaMurugesan/real-time-crypto-dashboard.git
 cd real-time-crypto-dashboard
 pip install -r requirements.txt
 streamlit run app.py
-
+```
 
 
 
