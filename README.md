@@ -77,7 +77,7 @@ streamlit run app.py
 
 
 
-DASHBOARD DEMO SCREENSHOTS --->
+
 ## 📸 Dashboard Demo Screenshots
 
 ### 🎛️ Controls & Coin Comparison
