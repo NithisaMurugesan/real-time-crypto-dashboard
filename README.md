@@ -78,8 +78,19 @@ streamlit run app.py
 
 
 DASHBOARD DEMO SCREENSHOTS --->
-![Demo Screenshot 1 - Dashboard Controls & Coin comparison](images/demo2.png)
-![Demo Screenshot 2 - Latest Crypto News](images/demo3.png)
-![Demo Screenshot 3 - 7-Day Price History Chart](images/demo5.png)
-![Demo Screenshot 4 - Multi-Coin Price Comparison Chart and Table](images/demo6.png)
-![Demo Screenshot 5 - BTC Price Over Time Chart and AI Trend Analysis with INR equivalent](images/demo7.png)
+## 📸 Dashboard Demo Screenshots
+
+### 🎛️ Controls & Coin Comparison
+![Dashboard](images/demo2.png)
+
+### 📰 Crypto News
+![News](images/demo3.png)
+
+### 📊 7-Day Chart
+![Chart](images/demo5.png)
+
+### 📈 Multi-Coin Comparison
+![Comparison](images/demo6.png)
+
+### 🤖 AI Trend Analysis
+![AI](images/demo7.png)
